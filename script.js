@@ -282,6 +282,11 @@ class App {
       this._renderWorkOut(workout);
     });
   }
+
+  reset() {
+    localStorage.removeItem('workout');
+    location.reload();
+  }
 }
 
 const app = new App();
