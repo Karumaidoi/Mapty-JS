@@ -64,8 +64,13 @@ class App {
   #workouts = [];
 
   constructor() {
+    // Get user position
     this._getPosition();
 
+    // Get data from local storage
+    this._getLocalStorage();
+
+    // Attach event handlers
     form.addEventListener('submit', this._newWorkout.bind(this));
 
     inputType.addEventListener('change', this._toggleElevationField);
@@ -78,7 +83,7 @@ class App {
       navigator.geolocation.getCurrentPosition(
         this._loadMap.bind(this),
         function error() {
-          console.log('Error');
+          alert('Unable to get location');
         }
       );
     }
@@ -95,6 +100,10 @@ class App {
     }).addTo(this.#map);
 
     this.#map.on('click', this._showForm.bind(this));
+
+    this.#workouts.forEach(workout => {
+      this._renderWorkOutMarker(workout);
+    });
   }
 
   _showForm(mapE) {
@@ -142,7 +151,7 @@ class App {
 
     // Add new object to workout array
     this.#workouts.push(workout);
-    console.log(this.#workouts);
+
     // Render workout as a marker
     this._renderWorkOutMarker(workout, type);
 
@@ -151,6 +160,9 @@ class App {
 
     // Clear input fields
     this._hideForm();
+
+    // Set local storage
+    this._setLocalStorage();
   }
 
   _renderWorkOutMarker(workout) {
@@ -172,7 +184,6 @@ class App {
   }
 
   _renderWorkOut(workout) {
-    console.log(workout.type);
     let html = `<li class="workout workout--${workout?.type}" data-id=${
       workout.id
     }>
@@ -243,7 +254,6 @@ class App {
 
   _moveToPopup(e) {
     const workoutEl = e.target.closest('.workout');
-    console.log(workoutEl);
 
     if (!workoutEl) return;
 
@@ -251,11 +261,25 @@ class App {
       work => work.id === workoutEl.dataset.id
     );
 
-    console.log(workout);
-
     this.#map.setView(workout.coords, 13, {
       animate: true,
       pan: { duration: 1 },
+    });
+  }
+
+  _setLocalStorage() {
+    localStorage.setItem('workout', JSON.stringify(this.#workouts));
+  }
+
+  _getLocalStorage() {
+    const data = JSON.parse(localStorage.getItem('workout'));
+
+    if (!data) return;
+
+    this.#workouts = data;
+
+    this.#workouts.forEach(workout => {
+      this._renderWorkOut(workout);
     });
   }
 }
